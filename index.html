@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HACKER TYPER: OPTIMIZED</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --primary: #00ff00;
+            --bg-dark: #020202;
+            --panel: rgba(10, 10, 10, 0.95);
+            --err: #ff0055;
+            --warn: #ffcc00;
+            --custom: #bd00ff;
+        }
+
+        body {
+            margin: 0; background-color: var(--bg-dark); color: var(--primary);
+            font-family: 'Share Tech Mono', monospace; height: 100vh;
+            overflow: hidden; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; user-select: none;
+            cursor: crosshair;
+        }
+
+        /* Optimized Background Layer (GPU) */
+        #bg-layer {
+            position: fixed; top: -50px; left: -50px; 
+            width: calc(100% + 100px); height: calc(100% + 100px);
+            background-image: linear-gradient(rgba(0, 20, 0, 0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 20, 0, 0.5) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            will-change: transform; /* Performance Hint */
+            animation: bgScroll 20s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes bgScroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(40px, 40px, 0); } }
+
+        /* --- SCREENS --- */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(5, 5, 5, 0.9); /* Removed Blur for performance */
+            z-index: 50; transition: opacity 0.2s;
+            will-change: opacity;
+        }
+        .hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+
+        h1 { 
+            font-size: 80px; margin: 0 0 10px 0; letter-spacing: 8px;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        h2 { color: #aaa; margin-bottom: 40px; font-size: 24px; letter-spacing: 3px; text-transform: uppercase; }
+
+        /* --- BUTTONS --- */
+        .btn {
+            width: 320px; padding: 15px; margin: 10px;
+            background: rgba(0,0,0,0.6); border: 2px solid var(--primary); color: var(--primary);
+            font-family: inherit; font-size: 24px; cursor: pointer;
+            transition: transform 0.1s, background 0.2s; text-transform: uppercase; position: relative; overflow: hidden;
+            clip-path: polygon(5% 0, 100% 0, 100% 70%, 95% 100%, 0 100%, 0 30%);
+        }
+        .btn:hover { background: var(--primary); color: black; transform: scale(1.02); }
+        .btn:active { transform: scale(0.98); }
+        
+        .btn-hard { border-color: var(--warn); color: var(--warn); }
+        .btn-hard:hover { background: var(--warn); }
+        
+        .btn-god { border-color: var(--err); color: var(--err); border-width: 3px; font-weight: bold; }
+        .btn-god:hover { background: var(--err); }
+
+        .btn-custom { border-color: var(--custom); color: var(--custom); }
+        .btn-custom:hover { background: var(--custom); }
+
+        /* Icons */
+        .icon-btn {
+            position: absolute; top: 30px; font-size: 32px; cursor: pointer; color: #666; 
+            transition: color 0.2s; z-index: 100; border: 1px solid #333; padding: 5px 10px; border-radius: 5px;
+            background: #000;
+        }
+        .icon-btn:hover { color: var(--primary); border-color: var(--primary); }
+        #settings-icon { right: 30px; }
+        #quit-icon { left: 30px; color: var(--err); border-color: #522; }
+        #quit-icon:hover { color: var(--err); border-color: var(--err); }
+
+        /* --- MENUS & MODALS --- */
+        .modal-panel {
+            background: var(--panel); border: 2px solid var(--primary); padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.1); text-align: center;
+            border-radius: 5px; position: relative;
+        }
+        #settings-modal { width: 450px; }
+        #custom-menu { width: 650px; text-align: left; border-color: var(--custom); }
+
+        .cfg-row { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; font-size: 18px; }
+        .cfg-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 25px; }
+        .cfg-check { 
+            display: flex; align-items: center; font-size: 16px; color: #ccc; cursor: pointer; 
+            padding: 5px; border: 1px solid transparent;
+        }
+        .cfg-check:hover { color: var(--custom); }
+        .cfg-check input { margin-right: 12px; accent-color: var(--custom); width: 20px; height: 20px; }
+        input[type=range] { width: 220px; accent-color: var(--primary); }
+
+        /* --- GAME AREA --- */
+        #game-container {
+            position: relative; width: 950px; height: 550px;
+            will-change: transform; /* Hardware Acceleration */
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #terminal-window {
+            width: 100%; height: 100%;
+            background: rgba(0, 10, 0, 0.95); border: 3px solid var(--primary);
+            padding: 50px; box-sizing: border-box;
+            font-size: 32px; line-height: 1.5; overflow: hidden; position: relative;
+            /* Simplified Scanline */
+            background-image: linear-gradient(transparent 50%, rgba(0, 255, 0, 0.02) 50%);
+            background-size: 100% 4px;
+        }
+
+        #text-layer-target { color: #335533; position: absolute; top: 50px; left: 50px; z-index: 1; }
+        #text-layer-user { color: var(--primary); position: absolute; top: 50px; left: 50px; z-index: 2; text-shadow: 0 0 5px var(--primary); }
+        .cursor { display: inline-block; width: 16px; height: 32px; background: var(--primary); animation: blink 0.5s infinite; vertical-align: text-bottom; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* HUD */
+        #timer-bar-frame { position: absolute; top: 0; left: 0; width: 100%; height: 12px; background: #111; border-bottom: 2px solid #333; }
+        #timer-fill { width: 100%; height: 100%; background: var(--primary); will-change: width; }
+        #hud { position: absolute; top: -50px; width: 100%; display: flex; justify-content: space-between; font-size: 22px; font-weight: bold; }
+
+        /* --- GAME OVER --- */
+        #game-over h1 { color: var(--err); }
+        #final-score-display { font-size: 40px; margin-bottom: 30px; }
+        #final-score { color: gold; font-weight: bold; }
+        .end-btn-group { display: flex; gap: 20px; }
+        .btn-restart { border-color: var(--primary); }
+        .btn-menu { border-color: #aaa; color: #aaa; }
+
+        /* --- OPTIMIZED CHAOS FX --- */
+        .chaos-spin { transform: rotate(180deg) translate3d(0,0,0); }
+        .chaos-tilt { transform: perspective(800px) rotateX(30deg) rotateY(-10deg) translate3d(0,0,0); }
+        .chaos-blur { filter: blur(4px); } 
+        .chaos-invert { filter: invert(1); }
+        .chaos-float { animation: float 3s infinite ease-in-out; }
+        .chaos-wobble { animation: wobble 0.2s infinite; }
+        .chaos-disco { animation: disco 0.5s infinite; }
+        
+        @keyframes float { 0%{transform:translate3d(0,0,0)} 50%{transform:translate3d(0,-50px,0)} 100%{transform:translate3d(0,0,0)} }
+        @keyframes wobble { 0%{transform:translate3d(3px,0,0)} 50%{transform:translate3d(-3px,0,0)} 100%{transform:translate3d(0,0,0)} }
+        @keyframes disco { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+
+        /* Clippy */
+        #clippy {
+            position: absolute; bottom: -300px; right: 30px;
+            width: 280px; background: #ffffea; color: black;
+            border: 3px solid black; padding: 20px; border-radius: 15px;
+            font-family: 'Comic Sans MS', 'Arial', sans-serif; font-size: 16px;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 200;
+            box-shadow: 15px 15px 0 rgba(0,0,0,0.3);
+            will-change: transform;
+        }
+        #clippy.show { transform: translateY(-330px); }
+
+        /* BSOD */
+        #bsod {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0000aa; color: white; z-index: 999;
+            display: none; flex-direction: column; padding: 100px; box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace; font-size: 24px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="bg-layer"></div>
+
+<div class="icon-btn" id="settings-icon" onclick="toggleSettings()">⚙️</div>
+<div class="icon-btn hidden" id="quit-icon" onclick="quitGame()">❌ QUIT</div>
+
+<div id="settings-screen" class="screen hidden" style="z-index: 200;">
+    <div class="modal-panel" id="settings-modal">
+        <h2 style="color:white; margin-top:0;">SETTINGS</h2>
+        <div class="cfg-row">
+            <span>VOLUME</span>
+            <input type="range" min="0" max="100" value="50" id="vol-slider" oninput="updateSettings()">
+        </div>
+        <button class="btn" onclick="toggleSettings()">CLOSE</button>
+    </div>
+</div>
+
+<div id="menu-screen" class="screen">
+    <h1>HACKER TYPER</h1>
+    <h2>// OPTIMIZED CORE //</h2>
+    <button class="btn" onclick="startGame('easy')">SCRIPT KIDDIE</button>
+    <button class="btn" onclick="startGame('normal')">HACKER</button>
+    <button class="btn btn-hard" onclick="startGame('hard')">CYBER PSYCHO</button>
+    <button class="btn btn-god" onclick="startGame('god')">GOD MODE</button>
+    <div style="height: 15px;"></div>
+    <button class="btn btn-custom" onclick="showCustomMenu()">CUSTOM TERMINAL</button>
+</div>
+
+<div id="custom-screen" class="screen hidden">
+    <div class="modal-panel" id="custom-menu">
+        <h2 style="color:var(--custom); margin-top:0;">CUSTOM CONFIG</h2>
+        <div class="cfg-row"><span>SPEED</span><input type="range" min="1" max="20" value="5" id="cust-decay"></div>
+        <div class="cfg-row"><span>GLITCHES</span><input type="range" min="0" max="10" value="3" id="cust-chance"></div>
+        <div class="cfg-row"><span>MAX STACK</span><input type="range" min="1" max="5" value="2" id="cust-max"></div>
+        <div class="cfg-group">
+            <label class="cfg-check"><input type="checkbox" value="invert" checked> Invert</label>
+            <label class="cfg-check"><input type="checkbox" value="blur" checked> Blur</label>
+            <label class="cfg-check"><input type="checkbox" value="tilt" checked> Tilt</label>
+            <label class="cfg-check"><input type="checkbox" value="spin"> Spin</label>
+            <label class="cfg-check"><input type="checkbox" value="float"> Float</label>
+            <label class="cfg-check"><input type="checkbox" value="clippy" checked> Clippy</label>
+            <label class="cfg-check"><input type="checkbox" value="bsod"> BSOD</label>
+            <label class="cfg-check"><input type="checkbox" value="disco"> Disco</label>
+            <label class="cfg-check"><input type="checkbox" value="wobble"> Shake</label>
+        </div>
+        <div style="text-align:center; margin-top:30px;">
+            <button class="btn btn-custom" onclick="startCustomGame()">START</button>
+            <button class="btn" style="border-color:#555; color:#aaa;" onclick="hideCustomMenu()">BACK</button>
+        </div>
+    </div>
+</div>
+
+<div id="game-ui" class="screen hidden" style="background:transparent;">
+    <div id="game-container">
+        <div id="hud">
+            <span>MODE: <span id="ui-mode">NORMAL</span></span>
+            <span>LINES: <span id="ui-score">0</span></span>
+        </div>
+        <div id="terminal-window">
+            <div id="timer-bar-frame"><div id="timer-fill"></div></div>
+            <div id="text-layer-target"></div>
+            <div id="text-layer-user"><span class="cursor"></span></div>
+        </div>
+        <div id="clippy"><div style="font-size:50px; position:absolute; top:-40px; right:-10px;">📎</div><strong>Assistant:</strong><br><span id="clippy-msg">Msg</span></div>
+    </div>
+</div>
+
+<div id="bsod"><h1>:(</h1><p>CRITICAL_PROCESS_DIED</p></div>
+
+<div id="game-over" class="screen hidden">
+    <h1 style="color:var(--err);">SYSTEM FAILURE</h1>
+    <p id="final-score-display">LINES HACKED: <span id="final-score">0</span></p>
+    <div class="end-btn-group">
+        <button class="btn btn-restart" onclick="restartGame()">⟲ RESTART</button>
+        <button class="btn btn-menu" onclick="backToMenu()">🏠 MENU</button>
+    </div>
+</div>
+
+<script>
+    const CONFIG = {
+        easy:   { name: 'KIDDIE', decay: 0.3, chaosChance: 0.1, maxSim: 1, types: ['invert'] },
+        normal: { name: 'HACKER', decay: 0.5, chaosChance: 0.3, maxSim: 2, types: ['invert', 'blur', 'clippy'] },
+        hard:   { name: 'PSYCHO', decay: 0.7, chaosChance: 0.6, maxSim: 3, types: ['invert', 'blur', 'clippy', 'tilt', 'float', 'wobble'] },
+        god:    { name: 'GOD MODE', decay: 1.0, chaosChance: 0.9, maxSim: 5, types: ['invert', 'blur', 'clippy', 'tilt', 'float', 'spin', 'bsod', 'wobble', 'disco'] }
+    };
+
+    const PHRASES = [
+        "sudo rm -rf / --no-preserve-root",
+        "initializing brute force attack",
+        "bypassing mainframe firewall",
+        "injecting sql query into database",
+        "decrypting administrator passwords",
+        "uploading trojan horse virus payload",
+        "access granted secure connection",
+        "downloading confidential files",
+        "routing proxy server through dark web",
+        "overriding biometric security",
+        "establishing neural network handshake",
+        "deleting system access logs",
+        "system meltdown imminent run escape",
+        "hacking the gibson mainframe core",
+        "trace program detected initiate panic"
+    ];
+
+    let SETTINGS = { volume: 0.5 };
+    let currentConfig = {};
+    let score = 0, timeLeft = 100, currentText = "", charIndex = 0;
+    let isPlaying = false, lastDiff = 'normal';
+    let lastTime = 0, chaosTimer = 0;
+    const CHAOS_INTERVAL = 2000;
+
+    // Elements
+    const screens = { menu: document.getElementById('menu-screen'), custom: document.getElementById('custom-screen'), game: document.getElementById('game-ui'), over: document.getElementById('game-over'), settings: document.getElementById('settings-screen') };
+    const gameContainer = document.getElementById('game-container');
+    const terminal = document.getElementById('terminal-window');
+    const targetEl = document.getElementById('text-layer-target');
+    const userEl = document.getElementById('text-layer-user');
+    const timerFill = document.getElementById('timer-fill');
+    const clippy = document.getElementById('clippy');
+    const bsod = document.getElementById('bsod');
+    const quitIcon = document.getElementById('quit-icon');
+
+    // --- AUDIO ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function sfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (SETTINGS.volume <= 0) return;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.connect(g); g.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        const vol = SETTINGS.volume;
+
+        if(type==='key') {
+            osc.type='triangle'; osc.frequency.setValueAtTime(500+(Math.random()*200), now);
+            g.gain.setValueAtTime(0.15*vol, now); g.gain.linearRampToValueAtTime(0, now+0.08);
+            osc.start(now); osc.stop(now+0.08);
+        } else if(type==='error') {
+            osc.type='sawtooth'; osc.frequency.setValueAtTime(150, now);
+            g.gain.setValueAtTime(0.3*vol, now); g.gain.linearRampToValueAtTime(0, now+0.3);
+            osc.start(now); osc.stop(now+0.3);
+        } else if(type==='chaos') {
+            osc.type='square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now+0.5);
+            g.gain.setValueAtTime(0.2*vol, now); g.gain.linearRampToValueAtTime(0, now+0.5);
+            osc.start(now); osc.stop(now+0.5);
+        } else if(type==='score') {
+            osc.type='sine'; osc.frequency.setValueAtTime(1200, now);
+            g.gain.setValueAtTime(0.2*vol, now); g.gain.linearRampToValueAtTime(0, now+0.3);
+            osc.start(now); osc.stop(now+0.3);
+        }
+    }
+
+    // --- UI ---
+    function showScreen(name) {
+        Object.values(screens).forEach(s => s.classList.add('hidden'));
+        screens[name].classList.remove('hidden');
+        quitIcon.classList.toggle('hidden', name !== 'game');
+    }
+    function toggleSettings() { screens.settings.classList.toggle('hidden'); }
+    function updateSettings() { SETTINGS.volume = document.getElementById('vol-slider').value / 100; }
+    function showCustomMenu() { showScreen('custom'); }
+    function hideCustomMenu() { showScreen('menu'); }
+    function backToMenu() { isPlaying=false; resetChaos(); setColorTheme('normal'); showScreen('menu'); }
+    function quitGame() { gameOver(); }
+    function restartGame() { if(currentConfig.name==='CUSTOM') startCustomGame(); else startGame(lastDiff); }
+
+    function setColorTheme(diff) {
+        let c = '#00ff00';
+        if(diff==='hard') c='#ffcc00';
+        if(diff==='god') c='#ff0055';
+        if(diff==='custom') c='#bd00ff';
+        document.documentElement.style.setProperty('--primary', c);
+    }
+
+    function startCustomGame() {
+        const d = document.getElementById('cust-decay').value / 10;
+        const c = document.getElementById('cust-chance').value / 10;
+        const m = document.getElementById('cust-max').value;
+        const types = [];
+        document.querySelectorAll('.cfg-check input:checked').forEach(cb => types.push(cb.value));
+        currentConfig = { name: 'CUSTOM', decay: d, chaosChance: c, maxSim: m, types: types };
+        setColorTheme('custom'); initGame();
+    }
+
+    function startGame(diff) {
+        lastDiff = diff; currentConfig = CONFIG[diff];
+        setColorTheme(diff); initGame();
+    }
+
+    function initGame() {
+        showScreen('game');
+        document.getElementById('ui-mode').innerText = currentConfig.name;
+        score = 0; timeLeft = 100; isPlaying = true;
+        resetChaos(); nextPhrase(); updateScore();
+        lastTime = performance.now(); chaosTimer = 0;
+        requestAnimationFrame(gameLoop);
+    }
+
+    // --- LOOP ---
+    function gameLoop(timestamp) {
+        if(!isPlaying) return;
+        const dt = timestamp - lastTime;
+        lastTime = timestamp;
+
+        // Decay
+        let decay = (currentConfig.decay + (score * 0.02)) * (dt / 100);
+        timeLeft -= decay;
+        timerFill.style.width = Math.max(0, timeLeft) + '%';
+        timerFill.style.background = timeLeft < 30 ? 'var(--err)' : 'var(--primary)';
+        
+        if(timeLeft <= 0) { gameOver(); return; }
+
+        // Chaos
+        chaosTimer += dt;
+        if(chaosTimer >= CHAOS_INTERVAL) {
+            tryChaos();
+            chaosTimer = 0;
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    function nextPhrase() { currentText = PHRASES[Math.floor(Math.random() * PHRASES.length)]; charIndex = 0; renderText(); }
+    function renderText() {
+        targetEl.innerText = currentText;
+        userEl.innerHTML = currentText.substring(0, charIndex) + '<span class="cursor"></span>';
+    }
+    function updateScore() { document.getElementById('ui-score').innerText = score; }
+
+    function tryChaos() {
+        if(currentConfig.types.length === 0) return;
+        if(Math.random() < currentConfig.chaosChance) triggerChaos();
+    }
+
+    function triggerChaos() {
+        sfx('chaos'); resetChaos();
+        const shuffled = currentConfig.types.sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, currentConfig.maxSim);
+
+        selected.forEach(type => {
+            if(type==='spin') gameContainer.classList.add('chaos-spin');
+            if(type==='tilt') gameContainer.classList.add('chaos-tilt');
+            if(type==='float') gameContainer.classList.add('chaos-float');
+            if(type==='wobble') gameContainer.classList.add('chaos-wobble');
+            if(type==='blur') terminal.classList.add('chaos-blur');
+            if(type==='invert') terminal.classList.add('chaos-invert');
+            if(type==='disco') document.body.classList.add('chaos-disco');
+            if(type==='clippy') {
+                const msgs = ["Delete System32?", "Why are you sweating?", "Typing too slow.", "Error: User incompetent"];
+                document.getElementById('clippy-msg').innerText = msgs[Math.floor(Math.random()*msgs.length)];
+                clippy.classList.add('show');
+            }
+            if(type==='bsod') {
+                bsod.style.display = 'flex'; setTimeout(()=>bsod.style.display='none', 250);
+            }
+        });
+        setTimeout(resetChaos, 3000);
+    }
+
+    function resetChaos() {
+        gameContainer.className = ''; terminal.className = ''; document.body.className = '';
+        clippy.classList.remove('show'); bsod.style.display = 'none';
+    }
+
+    window.addEventListener('keydown', e => {
+        if(!isPlaying) return;
+        if(e.key.length>1 && e.key!=='Backspace') return;
+        if(e.ctrlKey||e.altKey||e.metaKey) return;
+        e.preventDefault();
+
+        if(e.key === currentText[charIndex]) {
+            charIndex++; sfx('key'); timeLeft = Math.min(100, timeLeft+1.5);
+            if(charIndex >= currentText.length) {
+                score++; updateScore(); timeLeft = Math.min(100, timeLeft+15);
+                sfx('score'); resetChaos(); nextPhrase();
+            }
+        } else {
+            sfx('error'); timeLeft -= 5;
+            gameContainer.style.transform = `translate3d(${Math.random()*10-5}px, ${Math.random()*10-5}px, 0)`;
+            setTimeout(()=>gameContainer.style.transform='translate3d(0,0,0)', 100);
+        }
+        renderText();
+    });
+
+    function gameOver() {
+        isPlaying = false; resetChaos(); showScreen('over');
+        document.getElementById('final-score').innerText = score; sfx('error');
+    }
+</script>
+</body>
+</html>
